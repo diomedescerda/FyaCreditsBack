@@ -5,12 +5,12 @@ namespace FyaCredits.WebApi.Models;
 public sealed class RegisterCreditRequest
 {
     [Required]
-    [RegularExpression(@"\S", ErrorMessage = "The field cannot be blank.")]
+    [RegularExpression(@".*\S.*", ErrorMessage = "The field cannot be blank.")]
     [MaxLength(150)]
     public string ClientName { get; init; } = string.Empty;
 
     [Required]
-    [RegularExpression(@"\S", ErrorMessage = "The field cannot be blank.")]
+    [RegularExpression(@".*\S.*", ErrorMessage = "The field cannot be blank.")]
     [MaxLength(50)]
     public string ClientId { get; init; } = string.Empty;
 
