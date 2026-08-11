@@ -39,6 +39,28 @@ cp .env.example .env
 
 Apply migrations deliberately against the running API/database environment before using the application. Do not commit `.env` or any real credentials.
 
+## Database artifacts
+
+Committed SQL for creating and seeding the schema is available under `database/`:
+
+- `database/init.sql`: idempotent EF Core migration SQL that creates the `credits` table.
+- `database/seed.sql`: sample credits from the technical test annex.
+
+Apply them to the running Compose PostgreSQL instance:
+
+```bash
+docker compose exec -T postgres psql -U postgres -d fyacredits < database/init.sql
+docker compose exec -T postgres psql -U postgres -d fyacredits < database/seed.sql
+```
+
+Alternatively, from the host when the PostgreSQL port is reachable:
+
+```bash
+dotnet ef database update \
+  --project src/FyaCredits.Infrastructure \
+  --startup-project src/FyaCredits.WebApi
+```
+
 ## API Flow
 
 1. Request a demo JWT from `POST /api/auth/token` with a commercial name and configured demo password.
