@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+TestResults/
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+*.crt

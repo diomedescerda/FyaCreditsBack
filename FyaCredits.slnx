@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FyaCredits.Application/FyaCredits.Application.csproj" />
+    <Project Path="src/FyaCredits.Domain/FyaCredits.Domain.csproj" />
+    <Project Path="src/FyaCredits.Infrastructure/FyaCredits.Infrastructure.csproj" />
+    <Project Path="src/FyaCredits.WebApi/FyaCredits.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FyaCredits.UnitTests/FyaCredits.UnitTests.csproj" />
+  </Folder>
+</Solution>

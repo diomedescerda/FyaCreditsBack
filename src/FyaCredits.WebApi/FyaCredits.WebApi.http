@@ -1,0 +1,6 @@
+@FyaCredits.WebApi_HostAddress = http://localhost:5277
+
+GET {{FyaCredits.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
