@@ -1,8 +1,10 @@
+using System.Threading.RateLimiting;
 using System.Text;
 using FyaCredits.Application;
 using FyaCredits.Infrastructure;
 using FyaCredits.WebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +55,21 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -60,6 +77,7 @@ app.MapOpenApi();
 
 app.UseExceptionHandler();
 app.UseCors("Frontend");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
