@@ -11,6 +11,9 @@ public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
         CreditRegisteredNotification notification,
         CancellationToken cancellationToken)
     {
+        if (!configuration.GetValue("Email:Enabled", false))
+            return;
+
         var host = configuration["Email:Smtp:Host"];
         var from = configuration["Email:From"];
         var recipient = configuration["Email:To"];

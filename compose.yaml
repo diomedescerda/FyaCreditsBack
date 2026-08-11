@@ -9,6 +9,7 @@ services:
       Authentication__Issuer: ${JWT_ISSUER:-fya-credits}
       Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
       Authentication__DemoPassword: ${DEMO_PASSWORD:?DEMO_PASSWORD must be set}
+      Email__Enabled: ${EMAIL_ENABLED:-true}
       Email__From: ${EMAIL_FROM:-no-reply@fyasocialcapital.com}
       Email__To: ${EMAIL_TO:-diomedescerda@gmail.com}
       Email__Smtp__Host: ${SMTP_HOST:-smtp.example.com}
