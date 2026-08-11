@@ -9,6 +9,10 @@ services:
       Authentication__Issuer: ${JWT_ISSUER:-fya-credits}
       Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
       Authentication__DemoPassword: ${DEMO_PASSWORD:?DEMO_PASSWORD must be set}
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN_WEB:-http://localhost:4200}
+      Cors__AllowedOrigins__1: ${CORS_ORIGIN_WEB_ALT:-http://127.0.0.1:4200}
+      Cors__AllowedOrigins__2: ${CORS_ORIGIN_CAPACITOR_HTTP:-http://localhost}
+      Cors__AllowedOrigins__3: ${CORS_ORIGIN_CAPACITOR_HTTPS:-https://localhost}
       Email__Enabled: ${EMAIL_ENABLED:-true}
       Email__From: ${EMAIL_FROM:-no-reply@fyasocialcapital.com}
       Email__To: ${EMAIL_TO:-diomedescerda@gmail.com}
