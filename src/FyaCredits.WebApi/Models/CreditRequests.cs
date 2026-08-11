@@ -4,10 +4,14 @@ namespace FyaCredits.WebApi.Models;
 
 public sealed class RegisterCreditRequest
 {
-    [Required, MaxLength(150)]
+    [Required]
+    [RegularExpression(@"\S", ErrorMessage = "The field cannot be blank.")]
+    [MaxLength(150)]
     public string ClientName { get; init; } = string.Empty;
 
-    [Required, MaxLength(50)]
+    [Required]
+    [RegularExpression(@"\S", ErrorMessage = "The field cannot be blank.")]
+    [MaxLength(50)]
     public string ClientId { get; init; } = string.Empty;
 
     [Range(1, long.MaxValue)]
