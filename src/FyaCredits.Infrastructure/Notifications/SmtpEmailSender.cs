@@ -1,7 +1,8 @@
-using System.Net;
-using System.Net.Mail;
 using FyaCredits.Application;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Configuration;
+using MimeKit;
 
 namespace FyaCredits.Infrastructure.Notifications;
 
@@ -25,19 +26,32 @@ public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
             || string.IsNullOrWhiteSpace(recipient))
             throw new InvalidOperationException("Email SMTP configuration is incomplete.");
 
-        using var client = new SmtpClient(host, configuration.GetValue("Email:Smtp:Port", 587))
+        var port = configuration.GetValue("Email:Smtp:Port", 587);
+        var secureOptions = configuration.GetValue("Email:Smtp:EnableSsl", true)
+            ? port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTlsWhenAvailable
+            : SecureSocketOptions.None;
+
+        var message = new MimeMessage
         {
-            EnableSsl = configuration.GetValue("Email:Smtp:EnableSsl", true),
-            Credentials = string.IsNullOrWhiteSpace(username)
-                ? CredentialCache.DefaultNetworkCredentials
-                : new NetworkCredential(username, password)
-        };
-        using var message = new MailMessage(from, recipient)
-        {
+            From = { MailboxAddress.Parse(from) },
+            To = { MailboxAddress.Parse(recipient) },
             Subject = "Nuevo crédito registrado",
-            Body = $"Cliente: {notification.ClientName}\nMonto: {notification.Amount:N0}\nComercial: {notification.CommercialName}\nFecha: {notification.RegisteredAtUtc:O}"
+            Body = new TextPart("plain")
+            {
+                Text = $"Cliente: {notification.ClientName}\n" +
+                       $"Monto: {notification.Amount:N0}\n" +
+                       $"Comercial: {notification.CommercialName}\n" +
+                       $"Fecha: {notification.RegisteredAtUtc:O}"
+            }
         };
 
-        await client.SendMailAsync(message, cancellationToken);
+        using var client = new SmtpClient();
+        await client.ConnectAsync(host, port, secureOptions, cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(username))
+            await client.AuthenticateAsync(username, password, cancellationToken);
+
+        await client.SendAsync(message, cancellationToken);
+        await client.DisconnectAsync(true, cancellationToken);
     }
 }
