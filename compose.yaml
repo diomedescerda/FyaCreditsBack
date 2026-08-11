@@ -10,6 +10,7 @@ services:
       Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
       Authentication__DemoPassword: ${DEMO_PASSWORD:?DEMO_PASSWORD must be set}
       Email__From: ${EMAIL_FROM:-no-reply@fyasocialcapital.com}
+      Email__To: ${EMAIL_TO:-diomedescerda@gmail.com}
       Email__Smtp__Host: ${SMTP_HOST:-smtp.example.com}
       Email__Smtp__Port: ${SMTP_PORT:-587}
       Email__Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}

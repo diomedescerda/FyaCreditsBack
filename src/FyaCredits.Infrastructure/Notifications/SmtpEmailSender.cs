@@ -13,10 +13,13 @@ public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
     {
         var host = configuration["Email:Smtp:Host"];
         var from = configuration["Email:From"];
+        var recipient = configuration["Email:To"];
         var username = configuration["Email:Smtp:Username"];
         var password = configuration["Email:Smtp:Password"];
 
-        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        if (string.IsNullOrWhiteSpace(host)
+            || string.IsNullOrWhiteSpace(from)
+            || string.IsNullOrWhiteSpace(recipient))
             throw new InvalidOperationException("Email SMTP configuration is incomplete.");
 
         using var client = new SmtpClient(host, configuration.GetValue("Email:Smtp:Port", 587))
@@ -26,7 +29,7 @@ public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
                 ? CredentialCache.DefaultNetworkCredentials
                 : new NetworkCredential(username, password)
         };
-        using var message = new MailMessage(from, "fyasocialcapital@gmail.com")
+        using var message = new MailMessage(from, recipient)
         {
             Subject = "Nuevo crédito registrado",
             Body = $"Cliente: {notification.ClientName}\nMonto: {notification.Amount:N0}\nComercial: {notification.CommercialName}\nFecha: {notification.RegisteredAtUtc:O}"
