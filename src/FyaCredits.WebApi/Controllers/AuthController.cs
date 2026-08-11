@@ -2,12 +2,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FyaCredits.WebApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("Auth")]
 public sealed class AuthController(IConfiguration configuration) : ControllerBase
 {
     [HttpPost("token")]
@@ -30,11 +32,12 @@ public sealed class AuthController(IConfiguration configuration) : ControllerBas
             new Claim(ClaimTypes.Name, request.CommercialName.Trim()),
             new Claim(JwtRegisteredClaimNames.Sub, request.CommercialName.Trim())
         };
+        var tokenLifetimeMinutes = configuration.GetValue("Authentication:TokenLifetimeMinutes", 60);
         var token = new JwtSecurityToken(
             issuer,
             issuer,
             claims,
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTime.UtcNow.AddMinutes(tokenLifetimeMinutes),
             signingCredentials: credentials);
 
         return Ok(new TokenResponse(new JwtSecurityTokenHandler().WriteToken(token)));
