@@ -1,0 +1,55 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-fyacredits};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      Authentication__Issuer: ${JWT_ISSUER:-fya-credits}
+      Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
+      Authentication__DemoPassword: ${DEMO_PASSWORD:?DEMO_PASSWORD must be set}
+      Email__From: ${EMAIL_FROM:-no-reply@fyasocialcapital.com}
+      Email__Smtp__Host: ${SMTP_HOST:-smtp.example.com}
+      Email__Smtp__Port: ${SMTP_PORT:-587}
+      Email__Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Email__Smtp__Username: ${SMTP_USERNAME:-}
+      Email__Smtp__Password: ${SMTP_PASSWORD:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fyacredits}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  postgres-data:
+
+networks:
+  backend:
+    driver: bridge
