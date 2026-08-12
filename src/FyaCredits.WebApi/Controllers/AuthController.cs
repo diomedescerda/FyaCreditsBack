@@ -72,8 +72,9 @@ public sealed class AuthController(
             return Ok();
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var frontendBase = configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
-        var resetUrl = $"{frontendBase}/reset-password" +
+        var resetBase = configuration["Authentication:ResetPasswordBaseUrl"]
+            ?? "com.fya.credits://reset-password";
+        var resetUrl = $"{resetBase}" +
                        $"?token={Uri.EscapeDataString(token)}" +
                        $"&email={Uri.EscapeDataString(request.Email.Trim())}";
 

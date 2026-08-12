@@ -10,6 +10,7 @@ services:
       Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
       Authentication__SeedEmail: ${SEED_EMAIL:-ana.comercial@fyasocialcapital.com}
       Authentication__SeedPassword: ${SEED_PASSWORD:?SEED_PASSWORD must be set}
+      Authentication__ResetPasswordBaseUrl: ${RESET_PASSWORD_BASE_URL:-com.fya.credits://reset-password}
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost:4200}
       Cors__AllowedOrigins__0: ${CORS_ORIGIN_WEB:-http://localhost:4200}
       Cors__AllowedOrigins__1: ${CORS_ORIGIN_WEB_ALT:-http://127.0.0.1:4200}
