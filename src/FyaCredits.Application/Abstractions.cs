@@ -42,9 +42,7 @@ public sealed record RegisterCreditCommand(
     int TermMonths);
 
 public sealed record CreditQuery(
-    string? ClientName,
-    string? ClientId,
-    string? CommercialName,
+    string? Search,
     string SortBy,
     string SortDirection,
     int Page,

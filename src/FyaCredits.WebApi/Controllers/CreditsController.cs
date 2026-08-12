@@ -41,9 +41,7 @@ public sealed class CreditsController(CreditService creditService) : ControllerB
 
         var result = await creditService.SearchAsync(
             new CreditQuery(
-                request.ClientName,
-                request.ClientId,
-                request.CommercialName,
+                request.Search,
                 request.SortBy,
                 request.SortDirection.ToLowerInvariant(),
                 request.Page,

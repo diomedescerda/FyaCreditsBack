@@ -18,12 +18,15 @@ public sealed class CreditRepository(ApplicationDbContext dbContext) : ICreditRe
     {
         var credits = dbContext.Credits.AsNoTracking().AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(query.ClientName))
-            credits = credits.Where(credit => EF.Functions.ILike(credit.ClientName, $"%{query.ClientName.Trim()}%"));
-        if (!string.IsNullOrWhiteSpace(query.ClientId))
-            credits = credits.Where(credit => EF.Functions.ILike(credit.ClientId, $"%{query.ClientId.Trim()}%"));
-        if (!string.IsNullOrWhiteSpace(query.CommercialName))
-            credits = credits.Where(credit => EF.Functions.ILike(credit.CommercialName, $"%{query.CommercialName.Trim()}%"));
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+            credits = long.TryParse(search, out _)
+                ? credits.Where(credit => EF.Functions.ILike(credit.ClientId, $"%{search}%"))
+                : credits.Where(credit =>
+                    EF.Functions.ILike(credit.ClientName, $"%{search}%") ||
+                    EF.Functions.ILike(credit.CommercialName, $"%{search}%"));
+        }
 
         credits = query.SortBy.ToLowerInvariant() switch
         {

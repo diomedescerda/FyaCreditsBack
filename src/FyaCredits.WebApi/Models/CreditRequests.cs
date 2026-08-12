@@ -26,9 +26,8 @@ public sealed class RegisterCreditRequest
 
 public sealed class CreditQueryRequest
 {
-    public string? ClientName { get; init; }
-    public string? ClientId { get; init; }
-    public string? CommercialName { get; init; }
+    [MaxLength(150)]
+    public string? Search { get; init; }
     public string SortBy { get; init; } = "date";
     public string SortDirection { get; init; } = "desc";
 
