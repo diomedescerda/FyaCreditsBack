@@ -21,6 +21,7 @@ public interface ICurrentUser
 public interface IEmailSender
 {
     Task SendCreditRegisteredAsync(CreditRegisteredNotification notification, CancellationToken cancellationToken);
+    Task SendPasswordResetAsync(string email, string resetUrl, CancellationToken cancellationToken);
 }
 
 public sealed record CreditRegisteredNotification(

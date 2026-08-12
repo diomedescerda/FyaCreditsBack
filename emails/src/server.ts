@@ -1,13 +1,28 @@
 import express from 'express';
 import { render } from '@react-email/render';
 import { CreditEmail, type CreditEmailProps } from './CreditEmail.js';
+import { ResetPasswordEmail, type ResetPasswordEmailProps } from './ResetPasswordEmail.js';
 
 const app = express();
 app.use(express.json({ limit: '128kb' }));
 
 app.post('/render', async (req, res) => {
-  const props = req.body as Partial<CreditEmailProps>;
+  const body = req.body as Record<string, unknown>;
 
+  if (body.template === 'reset-password') {
+    const props = body as Partial<ResetPasswordEmailProps>;
+    if (!props.email || !props.resetUrl) {
+      res.status(400).json({ error: 'email and resetUrl are required for reset-password.' });
+      return;
+    }
+
+    const html = await render(ResetPasswordEmail({ email: props.email, resetUrl: props.resetUrl }));
+    console.log(`Rendered password reset email for ${props.email}`);
+    res.type('html').send(html);
+    return;
+  }
+
+  const props = body as Partial<CreditEmailProps>;
   if (!props.clientName || !props.clientId || typeof props.amount !== 'number') {
     res.status(400).json({ error: 'clientName, clientId and amount are required.' });
     return;
@@ -29,7 +44,18 @@ app.post('/render', async (req, res) => {
   res.type('html').send(html);
 });
 
-app.get('/preview', async (_req, res) => {
+app.get('/preview', async (req, res) => {
+  if (req.query.template === 'reset-password') {
+    const html = await render(
+      ResetPasswordEmail({
+        email: 'ana.comercial@fyasocialcapital.com',
+        resetUrl: 'http://localhost:4200/reset-password?token=sample&email=ana.comercial%40fyasocialcapital.com',
+      }),
+    );
+    res.type('html').send(html);
+    return;
+  }
+
   const html = await render(
     CreditEmail({
       clientName: 'Pepito Perez',
