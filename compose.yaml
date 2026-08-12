@@ -8,7 +8,9 @@ services:
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-fyacredits};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       Authentication__Issuer: ${JWT_ISSUER:-fya-credits}
       Authentication__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set}
-      Authentication__DemoPassword: ${DEMO_PASSWORD:?DEMO_PASSWORD must be set}
+      Authentication__SeedEmail: ${SEED_EMAIL:-ana.comercial@fyasocialcapital.com}
+      Authentication__SeedPassword: ${SEED_PASSWORD:?SEED_PASSWORD must be set}
+      Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost:4200}
       Cors__AllowedOrigins__0: ${CORS_ORIGIN_WEB:-http://localhost:4200}
       Cors__AllowedOrigins__1: ${CORS_ORIGIN_WEB_ALT:-http://127.0.0.1:4200}
       Cors__AllowedOrigins__2: ${CORS_ORIGIN_CAPACITOR_HTTP:-http://localhost}
@@ -45,6 +47,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s

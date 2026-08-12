@@ -2,9 +2,11 @@ using System.Threading.RateLimiting;
 using System.Text;
 using FyaCredits.Application;
 using FyaCredits.Infrastructure;
+using FyaCredits.Infrastructure.Persistence;
 using FyaCredits.WebApi.Middleware;
 using FyaCredits.WebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,7 +20,26 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CreditService>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 8;
+        options.User.RequireUniqueEmail = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+        options.Lockout.AllowedForNewUsers = true;
+    })
+    .AddRoles<IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
 
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
@@ -86,6 +107,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 app.MapOpenApi();
 
+using (var scope = app.Services.CreateScope())
+{
+    await SeedIdentityAsync(scope.ServiceProvider, builder.Configuration);
+}
+
 app.UseExceptionHandler();
 app.UseCors("Frontend");
 app.UseRateLimiter();
@@ -95,5 +121,33 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
+
+static async Task SeedIdentityAsync(IServiceProvider services, IConfiguration configuration)
+{
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+
+    const string role = "Comercial";
+    if (!await roleManager.RoleExistsAsync(role))
+        await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+
+    var seedEmail = configuration["Authentication:SeedEmail"] ?? "ana.comercial@fyasocialcapital.com";
+    var seedPassword = configuration["Authentication:SeedPassword"] ?? "FyaDev123!";
+
+    if (await userManager.FindByEmailAsync(seedEmail) is null)
+    {
+        var user = new ApplicationUser
+        {
+            UserName = seedEmail,
+            Email = seedEmail,
+            FullName = "Ana Comercial",
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(user, seedPassword);
+        if (result.Succeeded)
+            await userManager.AddToRoleAsync(user, role);
+    }
+}
 
 public partial class Program;

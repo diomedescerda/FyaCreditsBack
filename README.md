@@ -107,10 +107,25 @@ dotnet ef database update \
   --startup-project src/FyaCredits.WebApi
 ```
 
+## Authentication
+
+Authentication uses ASP.NET Core Identity with JWT. Users are `Comercial` accounts. A default user is seeded on startup (`SEED_EMAIL` / `SEED_PASSWORD`, default `ana.comercial@fyasocialcapital.com` / `FyaDev123!`).
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/auth/register` | Create a Comercial account (fullName, email, password) |
+| `POST /api/auth/login` | Email + password → `{ accessToken, fullName, email }` |
+| `POST /api/auth/forgot-password` | Emails a password-reset link to the user |
+| `POST /api/auth/reset-password` | email + token + new password |
+
+- Lockout: 5 failed attempts → 5-minute lock.
+- Token lifetime: `Authentication:TokenLifetimeMinutes` (default 60).
+- Auth endpoints are rate-limited (10/min per IP).
+
 ## API Flow
 
-1. Request a demo JWT from `POST /api/auth/token` with a commercial name and configured demo password.
-2. Send the token as `Authorization: Bearer <token>` to `POST /api/credits` and `GET /api/credits`.
+1. Register a user (`POST /api/auth/register`) or use the seeded account.
+2. Login (`POST /api/auth/login`) and send the returned `accessToken` as `Authorization: Bearer <token>` to `POST /api/credits` and `GET /api/credits`.
 3. Credit query filters and sorting are server-side query parameters. Supported sorting values are `date` and `amount`.
 
-The commercial representative is derived from the authenticated token. Credit registration publishes an email notification to the in-process producer/consumer queue after persistence.
+The commercial representative is derived from the authenticated user (their `FullName`). Credit registration publishes an email notification to the in-process producer/consumer queue after persistence.

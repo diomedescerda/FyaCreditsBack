@@ -1,17 +1,33 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace FyaCredits.UnitTests;
 
-public sealed class CreditApiBehaviorTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class CreditApiBehaviorTests : IClassFixture<CreditApiBehaviorTests.ApiFactory>
 {
+    private const string TestEmail = "test.comercial@fya.local";
+    private const string TestPassword = "TestPass123!";
+
     private readonly WebApplicationFactory<Program> factory;
 
-    public CreditApiBehaviorTests(WebApplicationFactory<Program> factory)
+    public CreditApiBehaviorTests(ApiFactory factory)
     {
         this.factory = factory;
+    }
+
+    public sealed class ApiFactory : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseSetting("ConnectionStrings:DefaultConnection",
+                "Host=localhost;Port=5432;Database=fyacredits;Username=postgres;Password=change-me");
+            builder.UseSetting("Authentication:SeedEmail", TestEmail);
+            builder.UseSetting("Authentication:SeedPassword", TestPassword);
+            builder.UseSetting("Frontend:BaseUrl", "http://localhost:4200");
+        }
     }
 
     [Fact]
@@ -78,12 +94,12 @@ public sealed class CreditApiBehaviorTests : IClassFixture<WebApplicationFactory
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private static async Task AuthenticateAsync(HttpClient client)
+    private async Task AuthenticateAsync(HttpClient client)
     {
-        var response = await client.PostAsJsonAsync("/api/auth/token", new
+        var response = await client.PostAsJsonAsync("/api/auth/login", new
         {
-            commercialName = "Ana Comercial",
-            password = "development-password"
+            email = TestEmail,
+            password = TestPassword
         });
         response.EnsureSuccessStatusCode();
 
