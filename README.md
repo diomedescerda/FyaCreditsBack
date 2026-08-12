@@ -1,133 +1,44 @@
 # Fya Credits Backend
 
-ASP.NET Core Web API on .NET 10 with Clean Architecture, EF Core, and PostgreSQL.
+Backend de ASP.NET Core Web API sobre .NET 10 con Clean Architecture, EF Core y PostgreSQL.
 
-## Projects
+## Ramas
 
-- `src/FyaCredits.Domain`: domain model and invariants.
-- `src/FyaCredits.Application`: use cases and application abstractions.
-- `src/FyaCredits.Infrastructure`: EF Core persistence and notification worker.
-- `src/FyaCredits.WebApi`: HTTP API, JWT authentication, and OpenAPI.
+- **`main`**: configuración del **backend desplegado**.
+- **`dev`**: configuración para correr el backend **localmente** (desarrollo).
 
-## Local Setup
+Para ejecutar el backend localmente, cambia a la rama `dev` y sigue las instrucciones de su `README.md`.
 
-1. Copy `.env.example` to `.env` and replace all development placeholder values.
-2. Start PostgreSQL with `docker compose up -d postgres`.
-3. Apply migrations:
+## Backend desplegado
 
-```bash
-dotnet ef database update \
-  --project src/FyaCredits.Infrastructure \
-  --startup-project src/FyaCredits.WebApi
-```
+Los servicios desplegados son:
 
-4. Run the API:
+- **API:** `https://fyacreditsback-1cde.onrender.com`
+- **Email renderer:** `https://fyacreditsback.onrender.com`
+- **Base de datos:** PostgreSQL en Render (ya provisionada e inicializada)
 
-```bash
-dotnet run --project src/FyaCredits.WebApi
-```
+### Estados
 
-The OpenAPI document is available at `/openapi/v1.json` in development. Health status is available at `/health`.
+- Salud de la API: `https://fyacreditsback-1cde.onrender.com/health`
+- Documentación OpenAPI: `https://fyacreditsback-1cde.onrender.com/openapi/v1.json`
 
-## Docker
+### Credenciales semilla
 
-The Compose API container expects `.env` values for passwords and the JWT signing key:
+El usuario por defecto es:
 
-```bash
-cp .env.example .env
-```
+- **Correo:** `ana.comercial@fyasocialcapital.com`
+- **Contraseña:** `FyaDev123!`
 
-Apply migrations deliberately against the running API/database environment before using the application. Do not commit `.env` or any real credentials.
+También puedes registrarte como usuario nuevo desde la app.
 
-## Email (development)
+## Qué puedes probar desde la app
 
-During development, credit notifications are sent to `diomedescerda@gmail.com` using Gmail SMTP. A Gmail address must be used as the sender because Gmail rejects messages that claim a Gmail `From` address but are delivered by third-party servers (DMARC alignment).
+- **Registrar un crédito** con los datos del cliente y el comercial (tomado del usuario autenticado).
+- **Consultar créditos** registrados.
+- **Búsqueda unificada** por nombre del cliente, cédula o comercial.
+- **Ordenar** por fecha o valor.
+- **Paginación** de 15 registros por página.
+- **Ver detalles** de cada crédito.
+- **Recuperar contraseña**: la API envía un correo con un enlace que abre la app para restablecerla (usando el email renderer desplegado).
 
-To make sending work:
-
-1. On the Google account, enable **2-Step Verification** (Google → Security → 2-Step Verification).
-2. Create an **App Password** (Google → Security → App passwords → app "Mail" → generate a 16-character password).
-3. Put that password in `.env` (gitignored):
-   ```env
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_ENABLE_SSL=true
-   SMTP_USERNAME=diomedescerda@gmail.com
-   SMTP_PASSWORD=your-gmail-app-password
-   EMAIL_FROM=diomedescerda@gmail.com
-   EMAIL_TO=diomedescerda@gmail.com
-   ```
-4. Recreate the API container so it picks up the new values:
-   ```bash
-   docker compose up -d api
-   ```
-
-After this, registering a credit sends the notification email. Confirm in `docker compose logs api` that no `Credit notification` failure is logged.
-
-### Email template renderer (react-email)
-
-Notification emails are rendered as HTML by a small Node.js service using `react-email`, located under `emails/`:
-
-- `emails/src/CreditEmail.tsx`: the branded HTML template (Fya colors, client, amount, rate, term, commercial, date).
-- `emails/src/server.ts`: `POST /render` returns the rendered HTML; `GET /preview` shows a sample.
-
-The API calls it asynchronously from the email worker (`Email:Renderer:Url`). If the renderer is unavailable, the email falls back to plain text.
-
-Local development:
-
-```bash
-cd emails
-npm install
-npm start        # http://localhost:3000
-```
-
-With Docker Compose, `email-renderer` runs automatically and the API reaches it as `http://email-renderer:3000/render`.
-
-For the production deliverable, the recipient should be `fyasocialcapital@gmail.com` and the sender should use an authenticated domain through a dedicated ESP (SendGrid/Mailgun).
-
-## Database artifacts
-
-Committed SQL for creating and seeding the schema is available under `database/`:
-
-- `database/init.sql`: idempotent EF Core migration SQL that creates the `credits` table and the ASP.NET Core Identity tables.
-- `database/seed.sql`: sample credits from the technical test annex.
-- `database/seed_users.sql`: seeds the `Comercial` role and the default `Ana Comercial` user (password `FyaDev123!`).
-
-Apply them to the running Compose PostgreSQL instance:
-
-```bash
-docker compose exec -T postgres psql -U postgres -d fyacredits < database/init.sql
-docker compose exec -T postgres psql -U postgres -d fyacredits < database/seed.sql
-docker compose exec -T postgres psql -U postgres -d fyacredits < database/seed_users.sql
-```
-
-Alternatively, from the host when the PostgreSQL port is reachable:
-
-```bash
-dotnet ef database update \
-  --project src/FyaCredits.Infrastructure \
-  --startup-project src/FyaCredits.WebApi
-```
-
-## Authentication
-
-Authentication uses ASP.NET Core Identity with JWT. Users are `Comercial` accounts. A default user is seeded on startup (`SEED_EMAIL` / `SEED_PASSWORD`, default `ana.comercial@fyasocialcapital.com` / `FyaDev123!`).
-
-| Endpoint | Purpose |
-|---|---|
-| `POST /api/auth/register` | Create a Comercial account (fullName, email, password) |
-| `POST /api/auth/login` | Email + password → `{ accessToken, fullName, email }` |
-| `POST /api/auth/forgot-password` | Emails a password-reset link to the user |
-| `POST /api/auth/reset-password` | email + token + new password |
-
-- Lockout: 10 failed attempts → 5-minute lock.
-- Token lifetime: `Authentication:TokenLifetimeMinutes` (default 60).
-- Auth endpoints are rate-limited (10/min per IP).
-
-## API Flow
-
-1. Register a user (`POST /api/auth/register`) or use the seeded account.
-2. Login (`POST /api/auth/login`) and send the returned `accessToken` as `Authorization: Bearer <token>` to `POST /api/credits` and `GET /api/credits`.
-3. Credit query filters and sorting are server-side query parameters. Supported sorting values are `date` and `amount`.
-
-The commercial representative is derived from the authenticated user (their `FullName`). Credit registration publishes an email notification to the in-process producer/consumer queue after persistence.
+La autenticación usa JWT con ASP.NET Core Identity. No se requieren pasos de despliegue: la app se conecta a la API desplegada desde la rama `main`.
