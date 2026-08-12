@@ -51,6 +51,10 @@ public sealed class AuthController(
             return Unauthorized();
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+        if (result.IsLockedOut)
+            return Problem(
+                "Demasiados intentos fallidos. Cuenta bloqueada temporalmente, intenta en unos minutos.",
+                statusCode: StatusCodes.Status423Locked);
         if (!result.Succeeded)
             return Unauthorized();
 
@@ -93,6 +97,7 @@ public sealed class AuthController(
         if (!result.Succeeded)
             return ValidationProblem(result);
 
+        await userManager.ResetAccessFailedCountAsync(user);
         return Ok();
     }
 
