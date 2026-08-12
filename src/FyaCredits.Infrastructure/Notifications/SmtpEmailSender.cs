@@ -6,7 +6,7 @@ using MimeKit;
 
 namespace FyaCredits.Infrastructure.Notifications;
 
-public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
+public sealed class SmtpEmailSender(IConfiguration configuration, IEmailTemplateRenderer renderer) : IEmailSender
 {
     public async Task SendCreditRegisteredAsync(
         CreditRegisteredNotification notification,
@@ -31,25 +31,39 @@ public sealed class SmtpEmailSender(IConfiguration configuration) : IEmailSender
             ? port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTlsWhenAvailable
             : SecureSocketOptions.None;
 
+        var htmlBody = await renderer.RenderAsync(notification, cancellationToken);
+
+        var builder = new BodyBuilder
+        {
+            TextBody = $"Cliente: {notification.ClientName}\n" +
+                       $"Cédula o ID: {notification.ClientId}\n" +
+                       $"Monto: {notification.Amount:N0}\n" +
+                       $"Tasa de interés (NM): {notification.InterestRate}%\n" +
+                       $"Plazo: {notification.TermMonths} meses\n" +
+                       $"Comercial: {notification.CommercialName}\n" +
+                       $"Fecha: {notification.RegisteredAtUtc:O}"
+        };
+        if (!string.IsNullOrWhiteSpace(htmlBody))
+            builder.HtmlBody = htmlBody;
+
         var message = new MimeMessage
         {
             From = { MailboxAddress.Parse(from) },
             To = { MailboxAddress.Parse(recipient) },
             Subject = "Nuevo crédito registrado",
-            Body = new TextPart("plain")
-            {
-                Text = $"Cliente: {notification.ClientName}\n" +
-                       $"Monto: {notification.Amount:N0}\n" +
-                       $"Comercial: {notification.CommercialName}\n" +
-                       $"Fecha: {notification.RegisteredAtUtc:O}"
-            }
+            Body = builder.ToMessageBody()
         };
 
         using var client = new SmtpClient();
         await client.ConnectAsync(host, port, secureOptions, cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(username))
+        {
+            client.AuthenticationMechanisms.Clear();
+            client.AuthenticationMechanisms.Add("LOGIN");
+            client.AuthenticationMechanisms.Add("PLAIN");
             await client.AuthenticateAsync(username, password, cancellationToken);
+        }
 
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);

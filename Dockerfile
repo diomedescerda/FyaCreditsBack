@@ -15,7 +15,7 @@ RUN dotnet publish "src/FyaCredits.WebApi/FyaCredits.WebApi.csproj" \
     /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
-RUN apk add --no-cache curl icu-libs
+RUN apk add --no-cache curl icu-libs krb5-libs
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 WORKDIR /app

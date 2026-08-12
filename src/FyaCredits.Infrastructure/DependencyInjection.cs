@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<ICreditRepository, CreditRepository>();
         services.AddSingleton<NotificationQueue>();
         services.AddSingleton<INotificationQueue>(provider => provider.GetRequiredService<NotificationQueue>());
+        services.AddHttpClient("EmailRenderer");
+        services.AddSingleton<IEmailTemplateRenderer, EmailHtmlRenderer>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddHostedService<NotificationWorker>();
 

@@ -26,7 +26,10 @@ public sealed class CreditService(
             new CreditRegisteredNotification(
                 credit.Id,
                 credit.ClientName,
+                credit.ClientId,
                 credit.Amount,
+                credit.InterestRate,
+                credit.TermMonths,
                 credit.CommercialName,
                 credit.RegisteredAtUtc),
             cancellationToken);

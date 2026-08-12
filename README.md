@@ -64,6 +64,25 @@ To make sending work:
 
 After this, registering a credit sends the notification email. Confirm in `docker compose logs api` that no `Credit notification` failure is logged.
 
+### Email template renderer (react-email)
+
+Notification emails are rendered as HTML by a small Node.js service using `react-email`, located under `emails/`:
+
+- `emails/src/CreditEmail.tsx`: the branded HTML template (Fya colors, client, amount, rate, term, commercial, date).
+- `emails/src/server.ts`: `POST /render` returns the rendered HTML; `GET /preview` shows a sample.
+
+The API calls it asynchronously from the email worker (`Email:Renderer:Url`). If the renderer is unavailable, the email falls back to plain text.
+
+Local development:
+
+```bash
+cd emails
+npm install
+npm start        # http://localhost:3000
+```
+
+With Docker Compose, `email-renderer` runs automatically and the API reaches it as `http://email-renderer:3000/render`.
+
 For the production deliverable, the recipient should be `fyasocialcapital@gmail.com` and the sender should use an authenticated domain through a dedicated ESP (SendGrid/Mailgun).
 
 ## Database artifacts

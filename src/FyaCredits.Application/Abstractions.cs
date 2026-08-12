@@ -26,7 +26,10 @@ public interface IEmailSender
 public sealed record CreditRegisteredNotification(
     Guid CreditId,
     string ClientName,
+    string ClientId,
     long Amount,
+    decimal InterestRate,
+    int TermMonths,
     string CommercialName,
     DateTimeOffset RegisteredAtUtc);
 
