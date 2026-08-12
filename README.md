@@ -89,14 +89,16 @@ For the production deliverable, the recipient should be `fyasocialcapital@gmail.
 
 Committed SQL for creating and seeding the schema is available under `database/`:
 
-- `database/init.sql`: idempotent EF Core migration SQL that creates the `credits` table.
+- `database/init.sql`: idempotent EF Core migration SQL that creates the `credits` table and the ASP.NET Core Identity tables.
 - `database/seed.sql`: sample credits from the technical test annex.
+- `database/seed_users.sql`: seeds the `Comercial` role and the default `Ana Comercial` user (password `FyaDev123!`).
 
 Apply them to the running Compose PostgreSQL instance:
 
 ```bash
 docker compose exec -T postgres psql -U postgres -d fyacredits < database/init.sql
 docker compose exec -T postgres psql -U postgres -d fyacredits < database/seed.sql
+docker compose exec -T postgres psql -U postgres -d fyacredits < database/seed_users.sql
 ```
 
 Alternatively, from the host when the PostgreSQL port is reachable:
