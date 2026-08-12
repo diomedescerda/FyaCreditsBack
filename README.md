@@ -118,7 +118,7 @@ Authentication uses ASP.NET Core Identity with JWT. Users are `Comercial` accoun
 | `POST /api/auth/forgot-password` | Emails a password-reset link to the user |
 | `POST /api/auth/reset-password` | email + token + new password |
 
-- Lockout: 5 failed attempts → 5-minute lock.
+- Lockout: 10 failed attempts → 5-minute lock.
 - Token lifetime: `Authentication:TokenLifetimeMinutes` (default 60).
 - Auth endpoints are rate-limited (10/min per IP).
 
